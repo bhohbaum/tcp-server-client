@@ -19,8 +19,8 @@ DIRNAME=$(shell which dirname)
 ########################################################################################################################
 BASE_CFLAGS=-O3 -Wall -fPIC
 DEBUG_CFLAGS=-g
-SO_LIBFLAGS=--shared -Bdynamic -fPIE
-LD_FLAGS=-L ./ -ltcp-server-client
+SO_LIBFLAGS=--shared -Bdynamic
+LD_FLAGS=-L ./ -ltcp-server-client -fPIE
 
 ########################################################################################################################
 # Files and Filetypes
