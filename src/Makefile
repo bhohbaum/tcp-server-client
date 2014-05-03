@@ -47,20 +47,62 @@ endif
 ########################################################################################################################
 # Build targets and build steps
 ########################################################################################################################
-all: 
-	BASEDIR=`$(DIRNAME) $(shell pwd)/$0 | $(SED) -e 's/\/.\//\//g'` ; \
-	for MAKEFILE in `$(FIND) $$BASEDIR -name Makefile -type f` ; do \
-		$(CD) `$(DIRNAME) $$BASEDIR` ; \
-		include $$MAKEFILE ; \
-		$0 $@ ; \
-	done ; \
+all: execs libs
+
+execs: $(EXECS)
+
+libs: $(SHLIB) $(ARLIB)
+
+$(EXECS) $(SHLIB) $(ARLIB): $(OBJ)
+
+%.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+tcpserver: $(LIBOBJ)
+	$(CC) -o $@ $@.o $<
+
+tcpclient: $(LIBOBJ)
+	$(CC) -o $@ $@.o $<
+
+$(SHLIB) $(ARLIB): $(OBJ)
+	$(CC) -o $(SHLIB) $(SO_LIBFLAGS) $(LIBOBJ)
+	$(CC) -o $(ARLIB) $(AR_LIBFLAGS) $(LIBOBJ)
+	
+.PHONY: clean
+
+clean:
+	rm -f $(OBJ) $(EXECS) $(SHLIB) $(ARLIB)
 
 
-.PHONY: all
+
+
+include src/Makefile
 
 
 
 
 
+########################################################################################################################
+# cheat-shit...
+########################################################################################################################
 
 
+#tcp%: tcp%.o
+#	$(CC) -o $@ $^
+
+
+#$(OBJ): $(OBJ)
+#	ORIG=$(shell echo $@ | $(SED) -e 's/loc-//g') ; \
+#	$(MV) $$ORIG $@
+
+#	BASEDIR=`$(DIRNAME) $(shell pwd)/$0 | $(SED) -e 's/\/.\//\//g'` ; \
+#	for MAKEFILE in `$(FIND) $$BASEDIR -name Makefile -type f` ; do \
+#		$(CD) `$(DIRNAME) $$BASEDIR` ; \
+#		$0 $@ ; \
+#	done ; \
+
+#		$(OBJCP) --localize-symbol=$$FUNCNAME $$ORIG $@ ; \
+#		$(MV) $@ $$ORIG ; \
+		
+		
+		
