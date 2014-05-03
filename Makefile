@@ -16,8 +16,14 @@ all: $(EXECS)
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(EXECS): $(OBJ)
-	$(CC) -o $@ $<
+tcpserver: tcpserver.o
+	$(CC) -o $@ $^
+
+tcpclient: tcpclient.o
+	$(CC) -o $@ $^
+
+#$(EXECS): $(OBJ)
+#	$(CC) -o $@ $^
 
 .PHONY: clean
 

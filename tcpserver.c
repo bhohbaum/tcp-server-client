@@ -180,8 +180,9 @@ int server_main_loop(int listenfd) {
 				run(mesg, connfd, cliaddr);
 			}
 		} else {
-			while (waitpid(-1, &status, WNOHANG) != 0)
+			while (waitpid(-1, &status, WNOHANG) != 0) {
 				;
+			}
 		}
 		close(connfd);
 	}
