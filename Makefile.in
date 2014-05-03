@@ -20,6 +20,7 @@ DIRNAME=$(shell which dirname)
 BASE_CFLAGS=-O3 -Wall -fPIC
 DEBUG_CFLAGS=-g
 SO_LIBFLAGS=--shared -Bdynamic -fPIE
+LD_FLAGS=-L ./ -ltcp-server-client
 
 ########################################################################################################################
 # Files and Filetypes
@@ -33,7 +34,7 @@ HEADERS=$(HDEPS)
 MAINOBJ=tcpserver.o tcpclient.o
 LIBOBJ=netcomcore.o
 OBJ=$(MAINOBJ) $(LIBOBJ)
-SHLIB=tcp-server-client.so
+SHLIB=libtcp-server-client.so
 BINDIR=bin/
 SRCDIR=src/
 

@@ -26,7 +26,7 @@
 
 int client_start(int argc, char**argv) {
 	int sockfd, n;
-	struct sockaddr_in servaddr, cliaddr;
+	struct sockaddr_in servaddr;
 	char sendline[10000];
 	char recvline[10000];
 	int selret;
@@ -62,8 +62,9 @@ int client_start(int argc, char**argv) {
 //    FD_SET(STDOUT_FILENO, &wfds);
 		nfds = sockfd + 1;
 		selret = select(nfds, &rfds, &wfds, NULL, &tv);
+		selret = (selret > -1) ? selret : selret;
 		if (FD_ISSET(sockfd, &rfds)) {
-			printf("selret = %d\n", selret);
+//			printf("selret = %d\n", selret);
 			n = recvfrom(sockfd, recvline, 10000, 0, NULL, NULL);
 			recvline[n] = 0;
 			fputs(recvline, stdout);

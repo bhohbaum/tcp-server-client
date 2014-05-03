@@ -2,22 +2,22 @@ include ../Makefile.in
 ########################################################################################################################
 # Build targets and build steps
 ########################################################################################################################
-all: execs libs
+all: libs execs
 
 execs: $(EXECS)
 
 libs: $(SHLIB)
 
-$(EXECS) $(SHLIB): $(OBJ)
+$(EXECS): $(OBJ) $(SHLIB)
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-tcpserver: $(LIBOBJ)
-	$(CC) -o $@ $@.o $<
+tcpserver: $(SHLIB)
+	$(CC) -o $@ $@.o $(LD_FLAGS)
 
-tcpclient: $(LIBOBJ)
-	$(CC) -o $@ $@.o $<
+tcpclient: $(SHLIB)
+	$(CC) -o $@ $@.o $(LD_FLAGS)
 
 $(SHLIB): $(OBJ)
 	$(CC) -o $(SHLIB) $(SO_LIBFLAGS) $(LIBOBJ)
