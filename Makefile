@@ -10,6 +10,8 @@ NM=$(shell which nm)
 GREP=$(shell which grep)
 AWK=$(shell which awk)
 SED=$(shell which sed)
+FIND=$(shell which find)
+MKDIR=$(shell which mkdir)
 DIRNAME=$(shell which dirname)
 
 ########################################################################################################################
@@ -17,8 +19,7 @@ DIRNAME=$(shell which dirname)
 ########################################################################################################################
 BASE_CFLAGS=-O3 -Wall -fPIC
 DEBUG_CFLAGS=-g
-SO_LIBFLAGS=--shared -Bdynamic
-AR_LIBFLAGS=--static -Bstatic -lc
+SO_LIBFLAGS=--shared -Bdynamic -fPIE
 
 ########################################################################################################################
 # Files and Filetypes
@@ -33,7 +34,10 @@ MAINOBJ=tcpserver.o tcpclient.o
 LIBOBJ=netcomcore.o
 OBJ=$(MAINOBJ) $(LIBOBJ)
 SHLIB=tcp-server-client.so
-ARLIB=tcp-server-client.a
+BINDIR=bin/
+SRCDIR=src/
+
+TARGET=
 
 ########################################################################################################################
 # Debug switch
@@ -47,13 +51,25 @@ endif
 ########################################################################################################################
 # Build targets and build steps
 ########################################################################################################################
-all: 
-	BASEDIR=`$(DIRNAME) $(shell pwd)/$0 | $(SED) -e 's/\/.\//\//g'` ; \
+all execs libs clean:
+	BASEDIR=$(shell pwd) ; \
 	for MAKEFILE in `$(FIND) $$BASEDIR -name Makefile -type f` ; do \
-		$(CD) `$(DIRNAME) $$BASEDIR` ; \
-		include $$MAKEFILE ; \
-		$0 $@ ; \
+		if [ "`$(DIRNAME) $$MAKEFILE`" != "$$BASEDIR" ] ; then \
+			cd $$BASEDIR ; \
+			cd `$(DIRNAME) $$MAKEFILE` ; \
+			$(MAKE) $@ DEBUG=$(DEBUG) ; \
+		fi ; \
 	done ; \
+	cd $$BASEDIR ; \
+	if [ "$@" != "clean" ] ; then \
+		$(MKDIR) $(BINDIR) ; \
+		for FILE in $(EXECS) $(SHLIB) ; do \
+			$(CP) -fv $(SRCDIR)$$FILE $(BINDIR) ; \
+		done ; \
+	else \
+		$(RM) -Rfv $(BINDIR) ; \
+	fi ; \
+	
 
 
 .PHONY: all

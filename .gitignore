@@ -1,3 +1,6 @@
-*.o
-tcpserver
-tcpclient
+bin
+bin/*
+src/*.o
+src/*.so
+src/tcpserver
+src/tcpclient

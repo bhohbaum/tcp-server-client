@@ -10,6 +10,7 @@ NM=$(shell which nm)
 GREP=$(shell which grep)
 AWK=$(shell which awk)
 SED=$(shell which sed)
+FIND=$(shell which find)
 DIRNAME=$(shell which dirname)
 
 ########################################################################################################################
@@ -17,8 +18,7 @@ DIRNAME=$(shell which dirname)
 ########################################################################################################################
 BASE_CFLAGS=-O3 -Wall -fPIC
 DEBUG_CFLAGS=-g
-SO_LIBFLAGS=--shared -Bdynamic
-AR_LIBFLAGS=--static -Bstatic -lc
+SO_LIBFLAGS=--shared -Bdynamic -fPIE
 
 ########################################################################################################################
 # Files and Filetypes
@@ -33,7 +33,6 @@ MAINOBJ=tcpserver.o tcpclient.o
 LIBOBJ=netcomcore.o
 OBJ=$(MAINOBJ) $(LIBOBJ)
 SHLIB=tcp-server-client.so
-ARLIB=tcp-server-client.a
 
 ########################################################################################################################
 # Debug switch
@@ -51,9 +50,9 @@ all: execs libs
 
 execs: $(EXECS)
 
-libs: $(SHLIB) $(ARLIB)
+libs: $(SHLIB)
 
-$(EXECS) $(SHLIB) $(ARLIB): $(OBJ)
+$(EXECS) $(SHLIB): $(OBJ)
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -64,19 +63,17 @@ tcpserver: $(LIBOBJ)
 tcpclient: $(LIBOBJ)
 	$(CC) -o $@ $@.o $<
 
-$(SHLIB) $(ARLIB): $(OBJ)
+$(SHLIB): $(OBJ)
 	$(CC) -o $(SHLIB) $(SO_LIBFLAGS) $(LIBOBJ)
-	$(CC) -o $(ARLIB) $(AR_LIBFLAGS) $(LIBOBJ)
 	
-.PHONY: clean
+.PHONY: all
 
 clean:
-	rm -f $(OBJ) $(EXECS) $(SHLIB) $(ARLIB)
+	rm -f $(OBJ) $(EXECS) $(SHLIB)
 
 
 
 
-include src/Makefile
 
 
 
