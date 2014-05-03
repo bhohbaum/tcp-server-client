@@ -8,12 +8,12 @@
  * @link https://github.com/bhohbaum/tcp-server-client
  */
 
-
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <err.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,8 +27,8 @@
 int client_start(int argc, char**argv) {
 	int sockfd, n;
 	struct sockaddr_in servaddr;
-	char sendline[10000];
-	char recvline[10000];
+	char sendline[32];
+	char recvline[32];
 	int selret;
 	int nfds;
 	fd_set rfds;
@@ -65,23 +65,27 @@ int client_start(int argc, char**argv) {
 		selret = (selret > -1) ? selret : selret;
 		if (FD_ISSET(sockfd, &rfds)) {
 //			printf("selret = %d\n", selret);
-			n = recvfrom(sockfd, recvline, 10000, 0, NULL, NULL);
+			n = recvfrom(sockfd, recvline, sizeof(recvline), 0, NULL, NULL);
 			recvline[n] = 0;
 			fputs(recvline, stdout);
 			cont = n > 0;
 		} else if (FD_ISSET(STDIN_FILENO, &rfds)) {
-			if (fgets(sendline, 10000, stdin) != NULL) {
-				cont = sendto(sockfd, sendline, (strlen(sendline) - 1) * sizeof(char), 0, (struct sockaddr *) &servaddr, sizeof(servaddr));
+			if (fgets(sendline, sizeof(sendline), stdin) != NULL) {
+				cont = sendto(sockfd, sendline,
+						(strlen(sendline) - 1) * sizeof(char), 0,
+						(struct sockaddr *) &servaddr, sizeof(servaddr));
 			}
 		}
+//		printf("cont = %d\n", cont);
 	} while (cont > 0);
 
 	exit(EXIT_SUCCESS);
 
-	while (fgets(sendline, 10000, stdin) != NULL) {
-		sendto(sockfd, sendline, (strlen(sendline) - 1) * sizeof(char), 0, (struct sockaddr *) &servaddr, sizeof(servaddr));
+	while (fgets(sendline, sizeof(sendline), stdin) != NULL) {
+		sendto(sockfd, sendline, (strlen(sendline) - 1) * sizeof(char), 0,
+				(struct sockaddr *) &servaddr, sizeof(servaddr));
 		for (;;) {
-			n = recvfrom(sockfd, recvline, 10000, 0, NULL, NULL);
+			n = recvfrom(sockfd, recvline, sizeof(recvline), 0, NULL, NULL);
 			recvline[n] = 0;
 			fputs(recvline, stdout);
 			if (strcmp(recvline, "quit\n") == 0) {
@@ -91,12 +95,6 @@ int client_start(int argc, char**argv) {
 	}
 	return EXIT_FAILURE;
 }
-
-
-
-
-
-
 
 /******************************************************************************
  * split a string into an array of strings.
@@ -148,10 +146,10 @@ void run(char * cmd, int connfd, struct sockaddr_in cliaddr) {
 	int rlink[2];
 	int wlink[2];
 	pid_t pid;
-	char foo[1024];
+	char foo[32];
 	int status;
 	socklen_t clilen;
-	char mesg[1000];
+	char mesg[32];
 	int n;
 	int selret;
 	int nfds;
@@ -160,64 +158,89 @@ void run(char * cmd, int connfd, struct sockaddr_in cliaddr) {
 	fd_set efds;
 	struct timeval tv;
 	int waitret;
+	int sleeptime;
+	int retval = 0;
 
-	clilen = sizeof(cliaddr);
-	if (pipe(rlink) == -1) {
-		die("rpipe");
-	}
-	if (pipe(wlink) == -1) {
-		die("wpipe");
-	}
-	if ((pid = fork()) == -1) {
-		die("fork");
-	}
-	if (pid == 0) {
-		dup2(rlink[1], STDOUT_FILENO);
-		close(rlink[0]);
-		dup2(wlink[0], STDIN_FILENO);
-		close(wlink[1]);
-		n = system(cmd);
-		close(rlink[1]);
-		close(wlink[0]);
-		exit(n);
-	} else {
-		close(rlink[1]);
-		close(wlink[0]);
-		n = 1024;
-		selret = 0;
-		waitret = 1;
-		while (waitret >= 0) {
-			tv.tv_sec = 1;
-			tv.tv_usec = 0;
-			FD_ZERO(&rfds);
-			FD_SET(rlink[0], &rfds);
-			FD_SET(connfd, &rfds);
-			FD_ZERO(&wfds);
-//      FD_SET(wlink[1], &wfds);
-//      FD_SET(connfd, &wfds);
-			FD_ZERO(&efds);
-			FD_SET(connfd, &efds);
-			nfds = ((rlink[0] > wlink[1]) ? rlink[0] : (connfd > wlink[1]) ? connfd : wlink[1]) + 1;
-			selret = select(nfds, &rfds, &wfds, NULL, &tv);
-			selret = (selret > 0) ? 1 : 0;
-			if (FD_ISSET(rlink[0], &rfds)) {
-				n = read(rlink[0], foo, sizeof(foo));
-				sendto(connfd, foo, n, 0, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
-			} else if (FD_ISSET(connfd, &rfds)) {
-				n = recvfrom(connfd, mesg, 1000, 0, (struct sockaddr *) &cliaddr, &clilen);
-				if (n < 0)
-					goto end;
-				mesg[n] = 0;
-				printf("Received input from client: %s\n", mesg);
-				n = write(wlink[1], mesg, n);
-			} else if (FD_ISSET(connfd, &efds)) {
-				goto end;
-			}
-			waitret = waitpid(pid, &status, WNOHANG);
+	 while (retval == 0) {
+		clilen = sizeof(cliaddr);
+		if (pipe(rlink) == -1) {
+			die("rpipe");
 		}
-		end: close(rlink[0]);
-		close(wlink[1]);
-		exit(0);
+		if (pipe(wlink) == -1) {
+			die("wpipe");
+		}
+		if ((pid = fork()) == -1) {
+			die("fork");
+		}
+		if (pid == 0) {
+			dup2(rlink[1], STDOUT_FILENO);
+			close(rlink[0]);
+			dup2(wlink[0], STDIN_FILENO);
+			close(wlink[1]);
+			n = system(cmd);
+			close(rlink[1]);
+			close(wlink[0]);
+			exit(n);
+		} else {
+			close(rlink[1]);
+			close(wlink[0]);
+			n = 1024;
+			selret = 0;
+			waitret = 1;
+			sleeptime = 100000;
+			while (waitret >= 0) {
+				sleeptime -= 100;
+				tv.tv_sec = 0;
+				tv.tv_usec = sleeptime;
+				FD_ZERO(&rfds);
+				FD_SET(rlink[0], &rfds);
+				FD_SET(connfd, &rfds);
+				FD_ZERO(&wfds);
+				//      FD_SET(wlink[1], &wfds);
+				//      FD_SET(connfd, &wfds);
+				FD_ZERO(&efds);
+				FD_SET(connfd, &efds);
+				nfds = ((rlink[0] > wlink[1]) ? rlink[0] :
+						(connfd > wlink[1]) ? connfd : wlink[1]) + 1;
+				selret = select(nfds, &rfds, &wfds, NULL, &tv);
+				selret = (selret > 0) ? 1 : 0;
+				if (FD_ISSET(rlink[0], &rfds)) {
+					n = read(rlink[0], foo, sizeof(foo));
+					sendto(connfd, foo, n, 0, (struct sockaddr *) &cliaddr,
+							sizeof(cliaddr));
+				} else if (FD_ISSET(connfd, &rfds)) {
+					n = recvfrom(connfd, mesg, sizeof(mesg), 0,
+							(struct sockaddr *) &cliaddr, &clilen);
+					if (n < 0)
+						goto end;
+					mesg[n] = 0;
+					printf("Received input from client: %s\n", mesg);
+					n = write(wlink[1], mesg, n);
+				} else if (FD_ISSET(connfd, &efds)) {
+					printf("excepion fd!!\n");
+					sleeptime += 100000;
+					int error = 0;
+					socklen_t len = sizeof(error);
+					retval = getsockopt(connfd, SOL_SOCKET, SO_ERROR,
+							&error, &len);
+					printf(
+							"retval = %d, error = %d, len = %d, errno = %d, %s\n",
+							retval, error, len, errno, strerror(errno));
+					//				sendto(connfd, foo, n, 0, (struct sockaddr *) &cliaddr,
+					//										sizeof(cliaddr));
+					//				goto end;
+				}
+				waitret = waitpid(pid, &status, WNOHANG);
+			}
+			end: close(rlink[0]);
+			close(wlink[1]);
+			exit(0);
+		}
+		int error = 0;
+		socklen_t len = sizeof(error);
+		retval = getsockopt(connfd, SOL_SOCKET, SO_ERROR, &error, &len);
+		printf("retval = %d, error = %d, len = %d, errno = %d, %s\n", retval,
+				error, len, errno, strerror(errno));
 	}
 }
 
@@ -240,13 +263,15 @@ int server_main_loop(int listenfd) {
 			close(listenfd);
 			printf("-------------------------------------------------------\n");
 			printf("Received a new connection.\n");
-			n = recvfrom(connfd, mesg, 1000, 0, (struct sockaddr *) &cliaddr, &clilen);
+			n = recvfrom(connfd, mesg, 1000, 0, (struct sockaddr *) &cliaddr,
+					&clilen);
 			mesg[n] = 0;
 			printf("Command:\n");
 			printf("%s\n", mesg);
 			printf("-------------------------------------------------------\n");
 			if (strcmp(mesg, "quit\n") == 0) {
-				printf("Client sent quit command, terminating connection.\n");
+				printf(
+						"Client sent quit command, terminating connection. close(connfd);\n");
 				close(connfd);
 				exit(0);
 			} else {
@@ -258,6 +283,7 @@ int server_main_loop(int listenfd) {
 				;
 			}
 		}
+		printf("Terminating connection. close(connfd);\n");
 		close(connfd);
 	}
 	return 0;
@@ -294,6 +320,7 @@ int server_start(int argc, char ** argv) {
 
 		if (bind(s[nsock], res->ai_addr, res->ai_addrlen) < 0) {
 			cause = "bind";
+			printf("Terminating connection. close(s[nsock]);\n");
 			close(s[nsock]);
 			continue;
 		}

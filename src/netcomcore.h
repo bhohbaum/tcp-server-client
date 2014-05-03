@@ -45,19 +45,4 @@ void run(char * cmd, int connfd, struct sockaddr_in cliaddr);
 int server_main_loop(int listenfd);
 int server_start(int argc, char ** argv);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #endif
