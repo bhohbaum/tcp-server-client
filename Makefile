@@ -13,7 +13,7 @@ all execs libs clean:
 	done ; \
 	cd $$BASEDIR ; \
 	if [ "$@" != "clean" ] ; then \
-		$(MKDIR) $(BINDIR) ; \
+		$(MKDIR) -p $(BINDIR) ; \
 		for FILE in $(EXECS) $(SHLIB) ; do \
 			$(CP) -fv $(SRCDIR)$$FILE $(BINDIR) ; \
 		done ; \

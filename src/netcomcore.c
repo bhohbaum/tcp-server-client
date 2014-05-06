@@ -70,10 +70,11 @@ int client_start(int argc, char**argv) {
 			fputs(recvline, stdout);
 			cont = n > 0;
 		} else if (FD_ISSET(STDIN_FILENO, &rfds)) {
-			if (fgets(sendline, sizeof(sendline), stdin) != NULL) {
-				cont = sendto(sockfd, sendline,
-						(strlen(sendline) - 1) * sizeof(char), 0,
-						(struct sockaddr *) &servaddr, sizeof(servaddr));
+			n = read(STDIN_FILENO, sendline, sizeof(sendline));
+//			if (fgets(sendline, sizeof(sendline), stdin) != NULL) {
+			if (n > 0) {
+//				cont = sendto(sockfd, sendline, (strlen(sendline) - 1) * sizeof(char), 0, (struct sockaddr *) &servaddr, sizeof(servaddr));
+				cont = sendto(sockfd, sendline, n, 0, (struct sockaddr *) &servaddr, sizeof(servaddr));
 			}
 		}
 //		printf("cont = %d\n", cont);
@@ -82,8 +83,7 @@ int client_start(int argc, char**argv) {
 	exit(EXIT_SUCCESS);
 
 	while (fgets(sendline, sizeof(sendline), stdin) != NULL) {
-		sendto(sockfd, sendline, (strlen(sendline) - 1) * sizeof(char), 0,
-				(struct sockaddr *) &servaddr, sizeof(servaddr));
+		sendto(sockfd, sendline, (strlen(sendline) - 1) * sizeof(char), 0, (struct sockaddr *) &servaddr, sizeof(servaddr));
 		for (;;) {
 			n = recvfrom(sockfd, recvline, sizeof(recvline), 0, NULL, NULL);
 			recvline[n] = 0;
@@ -96,51 +96,6 @@ int client_start(int argc, char**argv) {
 	return EXIT_FAILURE;
 }
 
-/******************************************************************************
- * split a string into an array of strings.
- * the returned array has to be freed by the caller.
- *****************************************************************************/
-t_split_res * split(char * str) {
-	char buf[1024];
-	char ** res;
-	char * p;
-	char * tmpbuf;
-	int n_spaces;
-	int i;
-	t_split_res * s_res;
-
-	strcpy(buf, str);
-	res = NULL;
-	p = (char *) (long) strtok(buf, " ");
-	n_spaces = 0;
-	i = 0;
-	s_res = (t_split_res *) malloc(sizeof(t_split_res));
-
-	printf("Splitting String: '%s'\n", str);
-
-	/* split string and append tokens to 'res' */
-	while (p) {
-		res = realloc(res, sizeof(char *) * ++n_spaces);
-		if (res == NULL) {
-			printf("Insufficient memory.\n");
-			exit(-1); /* memory allocation failed */
-		}
-		res[n_spaces - 1] = p;
-		p = (char *) (long) strtok(NULL, " ");
-	}
-	/* realloc one extra element for the last NULL */
-	res = realloc(res, sizeof(char *) * (n_spaces + 1));
-	res[n_spaces] = 0;
-	for (i = 0; i < (n_spaces); i++) {
-		printf("res[%d] = %s\n", i, res[i]);
-		tmpbuf = (char *) malloc((strlen(res[i]) + 1) * sizeof(char *));
-		strcpy(tmpbuf, res[i]);
-		res[i] = tmpbuf;
-	}
-	s_res->arr = res;
-	s_res->num = n_spaces + 1;
-	return s_res;
-}
 
 void run(char * cmd, int connfd, struct sockaddr_in cliaddr) {
 	int rlink[2];
@@ -161,7 +116,7 @@ void run(char * cmd, int connfd, struct sockaddr_in cliaddr) {
 	int sleeptime;
 	int retval = 0;
 
-	 while (retval == 0) {
+	while (retval == 0) {
 		clilen = sizeof(cliaddr);
 		if (pipe(rlink) == -1) {
 			die("rpipe");
@@ -189,7 +144,7 @@ void run(char * cmd, int connfd, struct sockaddr_in cliaddr) {
 			waitret = 1;
 			sleeptime = 100000;
 			while (waitret >= 0) {
-				sleeptime -= 100;
+//				sleeptime -= 100;
 				tv.tv_sec = 0;
 				tv.tv_usec = sleeptime;
 				FD_ZERO(&rfds);
@@ -200,35 +155,45 @@ void run(char * cmd, int connfd, struct sockaddr_in cliaddr) {
 				//      FD_SET(connfd, &wfds);
 				FD_ZERO(&efds);
 				FD_SET(connfd, &efds);
-				nfds = ((rlink[0] > wlink[1]) ? rlink[0] :
-						(connfd > wlink[1]) ? connfd : wlink[1]) + 1;
+				nfds = ((rlink[0] > wlink[1]) ? rlink[0] : (connfd > wlink[1]) ? connfd : wlink[1]) + 1;
 				selret = select(nfds, &rfds, &wfds, NULL, &tv);
 				selret = (selret > 0) ? 1 : 0;
 				if (FD_ISSET(rlink[0], &rfds)) {
+					printf("FD_ISSET(rlink[0], &rfds)\n");
 					n = read(rlink[0], foo, sizeof(foo));
-					sendto(connfd, foo, n, 0, (struct sockaddr *) &cliaddr,
-							sizeof(cliaddr));
-				} else if (FD_ISSET(connfd, &rfds)) {
-					n = recvfrom(connfd, mesg, sizeof(mesg), 0,
-							(struct sockaddr *) &cliaddr, &clilen);
-					if (n < 0)
+					if (n < 0) {
+						retval = -1;
 						goto end;
-					mesg[n] = 0;
-					printf("Received input from client: %s\n", mesg);
+					}
+					n = sendto(connfd, foo, n, 0, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
+					if (n < 0) {
+						retval = -1;
+						goto end;
+					}
+				} else if (FD_ISSET(connfd, &rfds)) {
+					printf("FD_ISSET(connfd, &rfds)\n");
+					n = recvfrom(connfd, mesg, sizeof(mesg), 0, (struct sockaddr *) &cliaddr, &clilen);
+					if (n < 0) {
+						retval = -1;
+						goto end;
+					}
+//					mesg[n] = 0;
+//					printf("Received input from client: %s\n", mesg);
 					n = write(wlink[1], mesg, n);
+					if (n < 0) {
+						retval = -1;
+						goto end;
+					}
 				} else if (FD_ISSET(connfd, &efds)) {
 					printf("excepion fd!!\n");
-					sleeptime += 100000;
+//					sleeptime += 100000;
 					int error = 0;
 					socklen_t len = sizeof(error);
-					retval = getsockopt(connfd, SOL_SOCKET, SO_ERROR,
-							&error, &len);
-					printf(
-							"retval = %d, error = %d, len = %d, errno = %d, %s\n",
-							retval, error, len, errno, strerror(errno));
-					//				sendto(connfd, foo, n, 0, (struct sockaddr *) &cliaddr,
-					//										sizeof(cliaddr));
-					//				goto end;
+					retval = getsockopt(connfd, SOL_SOCKET, SO_ERROR, &error, &len);
+					printf("retval = %d, error = %d, len = %d, errno = %d, %s\n", retval, error, len, errno, strerror(errno));
+					if (retval != 0) {
+						goto end;
+					}
 				}
 				waitret = waitpid(pid, &status, WNOHANG);
 			}
@@ -236,12 +201,12 @@ void run(char * cmd, int connfd, struct sockaddr_in cliaddr) {
 			close(wlink[1]);
 			exit(0);
 		}
-		int error = 0;
+
+/*		int error = 0;
 		socklen_t len = sizeof(error);
 		retval = getsockopt(connfd, SOL_SOCKET, SO_ERROR, &error, &len);
-		printf("retval = %d, error = %d, len = %d, errno = %d, %s\n", retval,
-				error, len, errno, strerror(errno));
-	}
+		printf("retval = %d, error = %d, len = %d, errno = %d, %s\n", retval, error, len, errno, strerror(errno));
+*/	}
 }
 
 int server_main_loop(int listenfd) {
@@ -263,15 +228,13 @@ int server_main_loop(int listenfd) {
 			close(listenfd);
 			printf("-------------------------------------------------------\n");
 			printf("Received a new connection.\n");
-			n = recvfrom(connfd, mesg, 1000, 0, (struct sockaddr *) &cliaddr,
-					&clilen);
+			n = recvfrom(connfd, mesg, 1000, 0, (struct sockaddr *) &cliaddr, &clilen);
 			mesg[n] = 0;
 			printf("Command:\n");
 			printf("%s\n", mesg);
 			printf("-------------------------------------------------------\n");
 			if (strcmp(mesg, "quit\n") == 0) {
-				printf(
-						"Client sent quit command, terminating connection. close(connfd);\n");
+				printf("Client sent quit command, terminating connection. close(connfd);\n");
 				close(connfd);
 				exit(0);
 			} else {

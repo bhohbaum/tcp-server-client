@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-
-<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="0.1152019919">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.1152019919" moduleId="org.eclipse.cdt.core.settings" name="Default">
@@ -33,20 +31,6 @@
 									<listOptionValue builtIn="false" value="/usr/include"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1465237939" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-						</toolChain>
-					</folderInfo>
-					<folderInfo id="0.1152019919.1030985879" name="/" resourcePath="bin">
-						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.889652560" name="No ToolChain" superClass="org.eclipse.cdt.build.core.prefbase.toolchain" unusedChildren="">
-							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.1005873278" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs.1642425730"/>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.405477278" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder.1410935533">
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1885249763" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.1223352407" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder.1968579790">
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1357867549" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.78689222" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder.2020706755">
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1451016581" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
@@ -87,20 +71,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<folderInfo id="0.1152019919.1334895940.180554567" name="/" resourcePath="bin">
-						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.106901900" name="No ToolChain" superClass="org.eclipse.cdt.build.core.prefbase.toolchain" unusedChildren="">
-							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.807437435" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs.467986380"/>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.375868101" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder.298704859">
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.494852779" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.112077962" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder.634174513">
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.342440112" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.2072041598" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder.405814724">
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.769540321" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
-							</tool>
-						</toolChain>
-					</folderInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src"/>
 					</sourceEntries>
@@ -113,8 +83,13 @@
 		<project id="tcp-server-client.null.924520760" name="tcp-server-client"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope" versionNumber="1">
-		<resource resourceType="PROJECT" workspacePath="/tcp-server-client"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/tcp-server-client"/>
+		</configuration>
+		<configuration configurationName="tcp-server-client">
+			<resource resourceType="PROJECT" workspacePath="/tcp-server-client"/>
+		</configuration>
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
