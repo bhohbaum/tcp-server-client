@@ -1,7 +1,13 @@
+########################################################################################################################
+# Include basic make settings
+########################################################################################################################
+
 include Makefile.in
+
 ########################################################################################################################
 # Build targets and build steps
 ########################################################################################################################
+
 all execs libs clean:
 	BASEDIR=$(shell pwd) ; \
 	for MAKEFILE in `$(FIND) $$BASEDIR -name Makefile -type f` ; do \
@@ -15,7 +21,7 @@ all execs libs clean:
 	if [ "$@" != "clean" ] ; then \
 		$(MKDIR) -p $(BINDIR) ; \
 		for FILE in $(EXECS) $(SHLIB) ; do \
-			$(CP) -fv $(SRCDIR)$$FILE $(BINDIR) ; \
+			$(MV) -fv $(SRCDIR)$$FILE $(BINDIR) ; \
 		done ; \
 	else \
 		$(RM) -Rfv $(BINDIR) ; \

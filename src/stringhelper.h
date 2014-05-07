@@ -16,6 +16,11 @@ typedef struct split_res {
 	int num;
 } t_split_res;
 
+/******************************************************************************
+ * General Functions
+ *****************************************************************************/
+t_split_res * split(char * str);
+
 
 
 #endif /* STRINGHELPER_H_ */
